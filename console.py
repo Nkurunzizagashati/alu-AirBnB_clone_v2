@@ -114,33 +114,43 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """ Create an object of any class"""
-        if not args:
-            print("** class name missing **")
-            return
-        elif args not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
-        params = {}
-        try:
-            class_name = args[0]
-            params_list = args[1:]
-            for param in params_list:
-                key, value = param.split("=")
-                key = key.replace("_", " ")
-                if value.startwith('"') and value.endswith('"'):
-                    value = value[1:-1].replace('\\"', '"')
-                elif "." in value:
-                    value = float(value)
-                else:
-                    value = int(value)
-                params[key] = value
-        except:
-            return
-        new_instance = HBNBCommand.classes[args](**params)
-        storage.save()
-        print(new_instance.id)
-        storage.save()
+    """ Create an object of any class"""
+    if not args:
+        print("** class name missing **")
+        return
+    elif args not in HBNBCommand.classes:
+        print("** class doesn't exist **")
+        return
+
+    params = {}
+    try:
+        # Extract the class name and parameters from the input
+        class_name, *params_list = args.split()
+        for param in params_list:
+            # Split each parameter into key and value
+            key, value = param.split("=")
+            # Replace underscores with spaces in the key
+            key = key.replace("_", " ")
+            # Handle string values enclosed in double quotes
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1].replace('\\"', '"')
+            # Convert float values
+            elif "." in value:
+                value = float(value)
+            # Convert integer values
+            else:
+                value = int(value)
+            params[key] = value
+    except:
+        print("** invalid parameter syntax **")
+        return
+
+    # Create an instance of the class with the given parameters
+    new_instance = HBNBCommand.classes[args](**params)
+    storage.save()
+    print(new_instance.id)
+    storage.save()
+
 
     def help_create(self):
         """ Help information for the create method """
