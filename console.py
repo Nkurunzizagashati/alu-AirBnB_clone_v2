@@ -115,41 +115,43 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        if not args:
+        if len(args) < 1:
             print("** class name missing **")
             return
-        elif args not in HBNBCommand.classes:
+        # convert the args to a list
+        args = args.split()
+
+        # the 1st element of the list is the class name
+        class_name = args[0]
+        print(class_name)
+        if class_name not in self.classes:
             print("** class doesn't exist **")
             return
-
-        params = {}
-        try:
-            # Extract the class name and parameters from the input
-            class_name, *params_list = args.split()
-            for param in params_list:
-                # Split each parameter into key and value
-                key, value = param.split("=")
-                # Replace underscores with spaces in the key
-                key = key.replace("_", " ")
-                # Handle string values enclosed in double quotes
-                if value.startswith('"') and value.endswith('"'):
-                    value = value[1:-1].replace('\\"', '"')
-                # Convert float values
-                elif "." in value:
+        new_instance = self.classes[class_name]()
+        for params in args[1:]:
+            if "=" not in params:
+                continue
+            key, value = params.split('=')
+            value = value.replace('_', ' ')
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1].replace('\\"', '"')
+            elif '.' in value:
+                try:
                     value = float(value)
-                # Convert integer values
-                else:
+                except ValueError:
+                    continue
+            else:
+                try:
                     value = int(value)
-                params[key] = value
-        except:
-            print("** invalid parameter syntax **")
-            return
+                except ValueError:
+                    continue
 
-        # Create an instance of the class with the given parameters
-        new_instance = HBNBCommand.classes[args](**params)
-        storage.save()
+            if value is not None and value != "" and hasattr(
+                    new_instance, key):
+                setattr(new_instance, key, value)
+
         print(new_instance.id)
-        storage.save()
+        new_instance.save()
 
 
     def help_create(self):
