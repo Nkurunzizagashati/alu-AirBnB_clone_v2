@@ -13,7 +13,8 @@ class FileStorage:
         if class is not None, else it will return all models currently in storage
         """
         if cls:
-            return (obj for obj in self.__objects if isinstance(obj, cls))
+            if cls:
+                return {k: v for k, v in self.__objects.items() if isinstance(v, cls)}
         else:
             return FileStorage.__objects
 
