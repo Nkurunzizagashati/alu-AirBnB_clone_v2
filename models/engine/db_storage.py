@@ -11,19 +11,16 @@ class DBStorage:
 
     def __init__(self):
         """ Set up the connection to the MySQL database """
-        user = os.environ.get('HBNB_MYSQL_USER')
-        password = os.environ.get('HBNB_MYSQL_PWD')
-        host = os.environ.get('HBNB_MYSQL_HOST')
-        db = os.environ.get('HBNB_MYSQL_DB')
-        env = os.environ.get('HBNB_ENV')
+        user = os.getenv('HBNB_MYSQL_USER')
+        password = os.getenv('HBNB_MYSQL_PWD')
+        host = os.getenv('HBNB_MYSQL_HOST')
+        db = os.getenv('HBNB_MYSQL_DB')
+        env = os.getenv('HBNB_ENV')
 
         self.__engine = create_engine(f'mysql+mysqldb://{user}:{password}@{host}/{db}',
                                       pool_pre_ping=True)
         if env == 'test':
             Base.metadata.drop_all(bind=self.__engine)
-        Base.metadata.create_all(bind=self.__engine)
-        self.__session = scoped_session(sessionmaker(bind=self.__engine,
-                                                     expire_on_commit=False))
 
     def all(self, cls=None):
         from models.user import User
@@ -32,19 +29,19 @@ class DBStorage:
         from models.amenity import Amenity
         from models.place import Place
         from models.review import Review
-        
+
         objects = {}
         if cls:
             query = self.__session.query(cls).all()
             for obj in query:
-                key = f"{obj.__class__.__name__}.{obj.id}"
+                key = obj.__class__.__name__ + '.' + obj.id
                 objects[key] = obj
         else:
             classes = [User, State, City, Amenity, Place, Review]
             for cls in classes:
                 query = self.__session.query(cls).all()
                 for obj in query:
-                    key = f"{obj.__class__.__name__}.{obj.id}"
+                    key = obj.__class__.__name__ + '.' + obj.id
                     objects[key] = obj
         return objects
 
@@ -62,3 +59,11 @@ class DBStorage:
         Base.metadata.create_all(bind=self.__engine)
         self.__session = scoped_session(sessionmaker(bind=self.__engine,
                                                      expire_on_commit=False))
+
+        Base.metadata.create_all(bind=self.__engine)
+        self.__session = scoped_session(sessionmaker(bind=self.__engine,
+                                                     expire_on_commit=False))
+        
+    def close(self):
+        """Close the session"""
+        self._session.close()
