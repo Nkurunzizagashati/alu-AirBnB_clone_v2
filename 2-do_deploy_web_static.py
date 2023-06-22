@@ -8,70 +8,42 @@ from datetime import datetime
 env.user = 'ubuntu'
 env.hosts = ['18.208.189.254', '54.227.30.49']
 
-
 def do_pack():
-    """Comm"""
-    local("mkdir -p versions")
-    result = local("tar -cvzf versions/web_static_{}.tgz web_static"
-                   .format(datetime.strftime(datetime.now(), "%Y%m%d%H%M%S")),
-                   capture=True)
-    if result.failed:
+    """Function to compress files in a .tgz archive"""
+    try:
+        if not os.path.exists("versions"):
+            local("mkdir versions")
+        time = datetime.now().strftime("%Y%m%d%H%M%S")
+        archive_path = "versions/web_static_{}.tgz".format(time)
+        local("tar -cvzf {} web_static".format(archive_path))
+        return archive_path
+    except:
         return None
-    return result
-
 
 def do_deploy(archive_path):
-    """Comment"""
+    """Distributes an archive to the web servers"""
     if not os.path.isfile(archive_path):
         return False
 
-    filename_regex = re.compile(r'[^/]+(?=\.tgz$)')
-    match = filename_regex.search(archive_path)
+    try:
+        # Upload archive to /tmp/ directory on the web server
+        put(archive_path, "/tmp/")
 
-    # Upload the archive to the /tmp/ directory of the web server
-    archive_filename = match.group(0)
-    result = put(archive_path, "/tmp/{}.tgz".format(archive_filename))
-    if result.failed:
-        return False
-    # Uncompress the archive to the folder
-    #     /data/web_static/releases/<archive filename without extension> on
-    #     the web server
+        # Extract archive to /data/web_static/releases/ directory
+        archive_filename = os.path.basename(archive_path)
+        archive_folder = "/data/web_static/releases/" + \
+            os.path.splitext(archive_filename)[0]
+        run("mkdir -p {}".format(archive_folder))
+        run("tar -xzf /tmp/{} -C {}".format(archive_filename, archive_folder))
+        run("rm /tmp/{}".format(archive_filename))
 
-    result = run(
-        "mkdir -p /data/web_static/releases/{}/".format(archive_filename))
-    if result.failed:
-        return False
-    result = run("tar -xzf /tmp/{}.tgz -C /data/web_static/releases/{}/"
-                 .format(archive_filename, archive_filename))
-    if result.failed:
-        return False
+        # Move files out of archive folder and remove it
+        run("mv {}/web_static/* {}/".format(archive_folder, archive_folder))
+        run("rm -rf {}".format(archive_folder + "/web_static"))
 
-    # Delete the archive from the web server
-    result = run("rm /tmp/{}.tgz".format(archive_filename))
-    if result.failed:
+        # Delete previous symbolic link and create new one
+        run("rm -f /data/web_static/current")
+        run("ln -s {} /data/web_static/current".format(archive_folder))
+        return True
+    except:
         return False
-    result = run("mv /data/web_static/releases/{}"
-                 "/web_static/* /data/web_static/releases/{}/"
-                 .format(archive_filename, archive_filename))
-    if result.failed:
-        return False
-    result = run("rm -rf /data/web_static/releases/{}/web_static"
-                 .format(archive_filename))
-    if result.failed:
-        return False
-
-    # Delete the symbolic link /data/web_static/current from the web server
-    result = run("rm -rf /data/web_static/current")
-    if result.failed:
-        return False
-
-    #  Create a new the symbolic link
-    #  /data/web_static/current on the web server,
-    #     linked to the new version of your code
-    #     (/data/web_static/releases/<archive filename without extension>)
-    result = run("ln -s /data/web_static/releases/{}/ /data/web_static/current"
-                 .format(archive_filename))
-    if result.failed:
-        return False
-
-    return True
