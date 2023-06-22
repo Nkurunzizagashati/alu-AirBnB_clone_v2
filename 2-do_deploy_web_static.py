@@ -8,6 +8,7 @@ from datetime import datetime
 env.user = 'ubuntu'
 env.hosts = ['18.208.189.254', '54.227.30.49']
 
+
 def do_pack():
     """Function to compress files in a .tgz archive"""
     try:
@@ -19,6 +20,7 @@ def do_pack():
         return archive_path
     except:
         return None
+
 
 def do_deploy(archive_path):
     """Distributes an archive to the web servers"""
