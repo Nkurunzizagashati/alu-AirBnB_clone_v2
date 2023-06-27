@@ -10,7 +10,8 @@ class FileStorage:
 
     def all(self, cls=None):
         """Returns a dictionary of models of a specified class currently in storage
-        if class is not None, else it will return all models currently in storage
+        if class is not None, else it will return all models 
+        currently in storage
         """
         if cls:
             return {k: v for k, v in self.__objects.items() if isinstance(v, cls)}
