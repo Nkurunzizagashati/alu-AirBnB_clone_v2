@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from models.base_model import Base
 import os
 
+
 class DBStorage:
     __engine = None
     __session = None
@@ -63,7 +64,7 @@ class DBStorage:
         Base.metadata.create_all(bind=self.__engine)
         self.__session = scoped_session(sessionmaker(bind=self.__engine,
                                                      expire_on_commit=False))
-        
+
     def close(self):
         """Close the session"""
-        self._session.close()
+        self.__session.remove()
