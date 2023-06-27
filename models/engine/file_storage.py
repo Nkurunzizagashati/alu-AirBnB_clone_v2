@@ -73,6 +73,7 @@
 #         this is method for deserializing the JSON file to objects
 #         """
 #         self.reload()
+# let's try another way
 
 
 #!/usr/bin/python3

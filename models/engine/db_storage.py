@@ -69,6 +69,8 @@
 #         """Close the session"""
 #         self.__session.close()
 
+# let's try another way
+
 
 #!/usr/bin/python3
 
